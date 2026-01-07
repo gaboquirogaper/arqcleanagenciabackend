@@ -1,11 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Domain.Entities
 {
     public class Cliente
     {
         public int Id { get; set; }
-        public string NombreEmpresa { get; set; } = string.Empty; // Ej: Buena Vida
-        public string ContactoNombre { get; set; } = string.Empty; // Ej: Juan Perez
+
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El apellido es obligatorio.")]
+        public string Apellido { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress(ErrorMessage = "Formato de email inválido.")]
         public string Email { get; set; } = string.Empty;
+
         public string Telefono { get; set; } = string.Empty;
     }
 }
