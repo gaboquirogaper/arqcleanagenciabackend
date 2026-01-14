@@ -14,7 +14,7 @@ namespace Domain.Entities
         [Range(1, 1000000, ErrorMessage = "El precio debe ser mayor a 0.")]
         public decimal Precio { get; set; }
 
-        // RELACIÓN: Este proyecto pertenece a un Cliente
+        
         [Required]
         public int ClienteId { get; set; }
     }

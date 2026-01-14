@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.Interfaces;
+using Application.Interfaces.UseCases; // <--- ESTA ERA LA CLAVE QUE FALTABA
+using Application.UseCases.Clientes;
 using Domain.Entities;
 using System.Threading.Tasks;
 
@@ -9,68 +10,36 @@ namespace Api.Controllers
     [ApiController]
     public class ClientesController : ControllerBase
     {
-        private readonly IClienteRepository _repository;
+        private readonly IObtenerClientesUseCase _obtener;
+        private readonly ICrearClienteUseCase _crear;
+        private readonly IEditarClienteUseCase _editar;
+        private readonly IEliminarClienteUseCase _eliminar;
 
-        public ClientesController(IClienteRepository repository)
+        public ClientesController(
+            IObtenerClientesUseCase obtener, ICrearClienteUseCase crear,
+            IEditarClienteUseCase editar, IEliminarClienteUseCase eliminar)
         {
-            _repository = repository;
+            _obtener = obtener;
+            _crear = crear;
+            _editar = editar;
+            _eliminar = eliminar;
         }
 
-        // GET: api/clientes
         [HttpGet]
-        public async Task<IActionResult> ObtenerTodos()
-        {
-            var clientes = await _repository.ObtenerTodos();
-            return Ok(clientes);
-        }
+        public async Task<IActionResult> GetAll() => Ok(await _obtener.Ejecutar());
 
-        // GET: api/clientes/5 (Para editar necesitamos buscar uno solo primero)
-        [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerPorId(int id)
-        {
-            var cliente = await _repository.ObtenerPorId(id);
-            if (cliente == null) return NotFound();
-            return Ok(cliente);
-        }
-
-        // POST: api/clientes
         [HttpPost]
-        public async Task<IActionResult> Crear(Cliente cliente)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+        public async Task<IActionResult> Create(Cliente c) { await _crear.Execute(c); return Ok(); }
 
-            await _repository.Crear(cliente);
-            return CreatedAtAction(nameof(ObtenerTodos), new { id = cliente.Id }, cliente);
-        }
-
-        // PUT: api/clientes/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Actualizar(int id, Cliente cliente)
+        public async Task<IActionResult> Update(int id, Cliente c)
         {
-            if (id != cliente.Id) return BadRequest("El ID de la URL no coincide.");
-
-            var existente = await _repository.ObtenerPorId(id);
-            if (existente == null) return NotFound("Cliente no encontrado.");
-
-            // Actualizamos los campos
-            existente.Nombre = cliente.Nombre;
-            existente.Apellido = cliente.Apellido;
-            existente.Email = cliente.Email;
-            existente.Telefono = cliente.Telefono;
-
-            await _repository.Actualizar(existente);
-            return NoContent();
+            c.Id = id;
+            await _editar.Execute(c);
+            return Ok();
         }
 
-        // DELETE: api/clientes/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Eliminar(int id)
-        {
-            var existente = await _repository.ObtenerPorId(id);
-            if (existente == null) return NotFound("Cliente no encontrado.");
-
-            await _repository.Eliminar(id);
-            return NoContent();
-        }
+        public async Task<IActionResult> Delete(int id) { await _eliminar.Execute(id); return Ok(); }
     }
 }

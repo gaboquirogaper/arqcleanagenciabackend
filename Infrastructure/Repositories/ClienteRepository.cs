@@ -21,21 +21,24 @@ namespace Infrastructure.Repositories
             return await _context.Clientes.ToListAsync();
         }
 
-        public async Task<Cliente?> ObtenerPorId(int id)
-        {
-            return await _context.Clientes.FindAsync(id);
-        }
-
         public async Task Crear(Cliente cliente)
         {
             _context.Clientes.Add(cliente);
             await _context.SaveChangesAsync();
         }
 
-        public async Task Actualizar(Cliente cliente)
+        // --- AGREGAR DESDE AQUÍ ---
+        public async Task Editar(Cliente cliente)
         {
-            _context.Entry(cliente).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var existente = await _context.Clientes.FindAsync(cliente.Id);
+            if (existente != null)
+            {
+                existente.Nombre = cliente.Nombre;
+                existente.Apellido = cliente.Apellido;
+                existente.Email = cliente.Email;
+                existente.Telefono = cliente.Telefono;
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task Eliminar(int id)
@@ -47,5 +50,6 @@ namespace Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+        // --- HASTA AQUÍ ---
     }
 }

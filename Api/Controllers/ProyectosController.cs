@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.Interfaces;
+using Application.UseCases.Proyectos;
 using Domain.Entities;
 using System.Threading.Tasks;
 
@@ -9,64 +9,46 @@ namespace Api.Controllers
     [ApiController]
     public class ProyectosController : ControllerBase
     {
-        private readonly IProyectoRepository _repository;
+        private readonly IObtenerProyectosUseCase _obtener;
+        private readonly ICrearProyectoUseCase _crear;
+        private readonly IEditarProyectoUseCase _editar;      // Nuevo
+        private readonly IEliminarProyectoUseCase _eliminar;  // Nuevo
 
-        public ProyectosController(IProyectoRepository repository)
+        public ProyectosController(
+            IObtenerProyectosUseCase obtener,
+            ICrearProyectoUseCase crear,
+            IEditarProyectoUseCase editar,
+            IEliminarProyectoUseCase eliminar)
         {
-            _repository = repository;
+            _obtener = obtener;
+            _crear = crear;
+            _editar = editar;
+            _eliminar = eliminar;
         }
 
-        // GET: api/proyectos
         [HttpGet]
-        public async Task<IActionResult> ObtenerTodos()
-        {
-            return Ok(await _repository.ObtenerTodos());
-        }
+        public async Task<IActionResult> GetAll() => Ok(await _obtener.Execute());
 
-        // GET: api/proyectos/cliente/1
-        [HttpGet("cliente/{clienteId}")]
-        public async Task<IActionResult> ObtenerPorCliente(int clienteId)
-        {
-            var proyectos = await _repository.ObtenerPorCliente(clienteId);
-            return Ok(proyectos);
-        }
-
-        // POST: api/proyectos
         [HttpPost]
-        public async Task<IActionResult> Crear(Proyecto proyecto)
+        public async Task<IActionResult> Create(Proyecto p)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            await _repository.Crear(proyecto);
-            return Ok(new { mensaje = "Proyecto creado", datos = proyecto });
+            await _crear.Execute(p);
+            return Ok();
         }
 
-        // PUT: api/proyectos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Actualizar(int id, Proyecto proyecto)
+        public async Task<IActionResult> Update(int id, Proyecto p)
         {
-            if (id != proyecto.Id) return BadRequest();
-
-            var existente = await _repository.ObtenerPorId(id);
-            if (existente == null) return NotFound();
-
-            existente.Nombre = proyecto.Nombre;
-            existente.Descripcion = proyecto.Descripcion;
-            existente.Precio = proyecto.Precio;
-
-            await _repository.Actualizar(existente);
-            return NoContent();
+            p.Id = id;
+            await _editar.Execute(p);
+            return Ok();
         }
 
-        // DELETE: api/proyectos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Eliminar(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var existente = await _repository.ObtenerPorId(id);
-            if (existente == null) return NotFound();
-
-            await _repository.Eliminar(id);
-            return NoContent();
+            await _eliminar.Execute(id);
+            return Ok();
         }
     }
 }
